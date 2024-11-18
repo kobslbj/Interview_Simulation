@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import getOpenAIResponse from '@/utils/openai';
 
 export default function SpeechRecognitionComponent() {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [recognition, setRecognition] = useState(null);
+  const [aiResponse, setAiResponse] = useState('');
 
   useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert('你的瀏覽器不支援語音識別');
       return;
@@ -40,7 +42,6 @@ export default function SpeechRecognitionComponent() {
       }
     });
 
-    // 處理識別錯誤
     newRecognition.addEventListener('error', (event) => {
       console.error('語音識別錯誤:', event.error);
       setIsListening(false);
@@ -66,38 +67,46 @@ export default function SpeechRecognitionComponent() {
       recognition.start();
       setIsListening(true);
       setTranscript('');
+      setAiResponse('');
     }
   };
 
-  const stopListening = () => {
+  const stopListening = async () => {
     if (recognition) {
       recognition.stop();
       setIsListening(false);
+      try {
+        const response = await getOpenAIResponse(transcript);
+        setAiResponse(response);
+      } catch (error) {
+        console.error('Error getting AI response:', error);
+      }
     }
   };
 
   return (
     <div className="flex h-screen flex-col items-center justify-center gap-4">
       <div className="flex flex-row items-center justify-center gap-4">
-        <button
+        <Button
           type="button"
           className="rounded-md bg-gray-500 p-2 text-white"
           onClick={startListening}
           disabled={isListening}
         >
-          Start Recording
-        </button>
-        <button
+          開始錄音
+        </Button>
+        <Button
           type="button"
           className="rounded-md bg-red-500 p-2 text-white"
           onClick={stopListening}
           disabled={!isListening}
         >
-          Stop Recording
-        </button>
+          停止錄音
+        </Button>
       </div>
       <p className="text-lg">Transcript: {transcript}</p>
       {isListening && <p>Recording...</p>}
+      <p className="text-lg">AI Response: {aiResponse}</p>
     </div>
   );
 }
