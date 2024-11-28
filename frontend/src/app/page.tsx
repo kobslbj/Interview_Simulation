@@ -1,10 +1,91 @@
-import SpeechRecognitionButton from '../components/SpeechRecognition';
+'use client';
 
-export default function Home() {
+import { useChat } from 'ai/react';
+import { useState, useEffect } from 'react';
+import ChatMessage from '@/components/chat/ChatMessage';
+import Sidebar from '@/components/chat/Sidebar';
+import ChatInput from '@/components/chat/ChatInput';
+
+export default function Chat() {
+  const [selectedRole, setSelectedRole] = useState('前端工程師');
+  const [difficulty, setDifficulty] = useState('medium');
+  const [key, setKey] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    setKey(prev => prev + 1);
+  }, [selectedRole, difficulty]);
+  
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    body: {
+      role: selectedRole,
+      difficulty
+    },
+    id: `chat-${key}`
+  });
+
+  const startListening = () => {
+    if ('webkitSpeechRecognition' in window) {
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'zh-TW';
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const {transcript} = event.results[0][0];
+        handleInputChange({ target: { value: transcript } } as any);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      if (!isListening) {
+        recognition.start();
+      } else {
+        recognition.stop();
+      }
+    } else {
+      alert('您的瀏覽器不支持語音識別功能');
+    }
+  };
+
   return (
-    <div className="grid min-h-screen grid-rows-[20px_1fr_20px] items-center justify-items-center gap-16 p-8 pb-20 font-[family-name:var(--font-geist-sans)] sm:p-20">
-      <h1 className="text-4xl font-bold">Interview Man</h1>
-      <SpeechRecognitionButton />
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 p-4">
+      <div className="flex gap-4 max-w-6xl mx-auto">
+        <Sidebar
+          selectedRole={selectedRole}
+          setSelectedRole={setSelectedRole}
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
+        />
+
+        <div className="flex-1">
+          <div className="flex flex-col w-full bg-white rounded-lg shadow-xl p-6 h-[800px]">
+            <div className="flex-1 overflow-y-auto space-y-4 mb-6 max-h-[calc(800px-120px)]">
+              {messages.map(m => (
+                <ChatMessage 
+                  key={m.id} 
+                  message={m} 
+                  selectedRole={selectedRole}
+                />
+              ))}
+            </div>
+
+            <ChatInput
+              input={input}
+              handleInputChange={handleInputChange}
+              handleSubmit={handleSubmit}
+              startListening={startListening}
+              isListening={isListening}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
