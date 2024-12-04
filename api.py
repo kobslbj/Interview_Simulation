@@ -1,47 +1,63 @@
+import sys
+
+paths = ['TTS', 'AV_Sync']
+for path in paths:
+    sys.path.append(path)
+
 from flask import Flask, request, jsonify, send_file
 import os
 import torch
-import sys
-sys.path.append('./TTS')
 from TTS.inference import generate_tts_audio
+from AV_Sync.inference import main as av_sync_main
 
-# 初始化 Flask
-app = Flask(__name__)
-
-# 設定模型檔案的路徑
+REFERENCE_SPEAKER = "./data/reference/yuchi1.mp3"
+COLOR_EMBEDDING = "./TTS/color_embedding"
 CKPT_BASE = "./TTS/checkpoints/base_speakers/EN"
 CKPT_CONVERTER = "./TTS/checkpoints/converter"
-OUTPUT_DIR = "./data/target"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-@app.route('/generate_audio', methods=['POST'])
-def generate_audio():
+TTS_OUTPUT_DIR = "./data/target"
+AV_SYNC_TEMP_DIR = "./AV_Sync/temp"
+FINAL_OUTPUT_PATH = "./data/target/result.mp4"
+
+app = Flask(__name__)
+
+@app.route('/generate_video', methods=['POST'])
+def generate_video():
     try:
-        # 接收前端發送的 JSON 資料
         data = request.json
-        text = data.get("text")
-        reference_speaker = data.get("reference_speaker")
-
-        if not text or not reference_speaker:
-            return jsonify({"error": "Missing 'text' or 'reference_speaker' in request"}), 400
-
-        # 呼叫 inference 函數來生成音訊
-        output_path = generate_tts_audio(
+        if 'text' not in data:
+            return jsonify({"error": "Text input is required"}), 400
+        
+        text = data['text']
+        
+        reference_speaker = REFERENCE_SPEAKER
+        tts_audio_path = os.path.join(TTS_OUTPUT_DIR, 'output.wav')
+        
+        print("Generating TTS audio...")
+        generate_tts_audio(
             text=text,
             reference_speaker=reference_speaker,
-            output_dir=OUTPUT_DIR,
+            output_dir=TTS_OUTPUT_DIR,
             ckpt_base=CKPT_BASE,
             ckpt_converter=CKPT_CONVERTER,
-            device=DEVICE
+            device=DEVICE,
         )
-
-        # 返回生成的音訊檔案
-        return send_file(output_path, as_attachment=True, attachment_filename="output.wav")
+        print(f"TTS audio saved to: {tts_audio_path}")
+        
+        print("Synchronizing audio with video...")
+        av_sync_main()
+        print(f"AV Sync result saved to: {FINAL_OUTPUT_PATH}")
+        
+        # Return the MP4 file to the front end
+        return send_file(FINAL_OUTPUT_PATH, as_attachment=True, mimetype='video/mp4')
 
     except Exception as e:
+        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
+
 if __name__ == '__main__':
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    print("123123")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    os.makedirs(TTS_OUTPUT_DIR, exist_ok=True)
+    os.makedirs(AV_SYNC_TEMP_DIR, exist_ok=True)
+    app.run(host='0.0.0.0', port=5000)

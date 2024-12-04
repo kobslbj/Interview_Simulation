@@ -3,13 +3,15 @@ import torch
 from openvoice import se_extractor
 from openvoice.api import BaseSpeakerTTS, ToneColorConverter
 
-CKPT_BASE = "checkpoints/base_speakers/EN"
-CKPT_CONVERTER = "checkpoints/converter"
-REFERENCE_SPEAKER = "../data/reference/testing2.mp3"
-OUTPUT_DIR = "../data/target"
+# 這是從最外層的資料夾執行程式時的相對路徑
+CKPT_BASE = "./TTS/checkpoints/base_speakers/EN"
+CKPT_CONVERTER = "./TTS/checkpoints/converter"
+REFERENCE_SPEAKER = "./data/reference/yuchi.mp3"
+COLOR_EMBEDDING = "./TTS/color_embedding"
+OUTPUT_DIR = "./data/target"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-text = 'fuck you bitch'
+text = 'Prosody is the rhythmic and intonational aspect of spoken language that significantly influences how speech is perceived and understood. It encompasses elements such as pitch, tone, stress, and tempo, which together convey emotions, emphasize meaning, and structure communication. '
 
 def generate_tts_audio(text, reference_speaker, output_dir, ckpt_base, ckpt_converter, device="cpu"):
     os.makedirs(output_dir, exist_ok=True)
@@ -24,7 +26,7 @@ def generate_tts_audio(text, reference_speaker, output_dir, ckpt_base, ckpt_conv
 
     # speaker embedding
     source_se = torch.load(f'{ckpt_base}/en_style_se.pth').to(device)
-    target_se, _ = se_extractor.get_se(reference_speaker, tone_color_converter, target_dir='color_embedding', vad=True)
+    target_se, _ = se_extractor.get_se(reference_speaker, tone_color_converter, target_dir=COLOR_EMBEDDING, vad=True)
 
     base_speaker_tts.tts(text, src_path, speaker='default', language='English', speed=1.0)
 
