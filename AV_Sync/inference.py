@@ -8,8 +8,8 @@ import torch, face_detection
 from models import Wav2Lip
 import platform
 
-CHECKPOINT_PATH = './AV_Sync/checkpoints/wav2lip_gan.pth'
-FACE_PATH = './data/reference/yuchi1.mp4'
+CHECKPOINT_PATH = './AV_Sync/checkpoints/wav2lip.pth'
+FACE_PATH = './data/reference/elon.jpg'
 AUDIO_PATH = './data/target/output.wav'
 OUTFILE_PATH = './data/target/result.mp4'
 TEMP_PATH = './AV_Sync/temp'
@@ -21,7 +21,7 @@ WAV2LIP_BATCH_SIZE = 128  # Wav2Lip 模型的批次大小
 RESIZE_FACTOR = 0.8  # 縮小解析度的比例
 CROP = [0, -1, 0, -1]  # 裁剪影片（上、下、左、右）
 BOX = [-1, -1, -1, -1]  # 固定臉部框的邊界 (上、下、左、右)
-ROTATE = False  # 是否將影片旋轉
+ROTATE = True  # 是否將影片旋轉
 NOSMOOTH = True  # 是否禁用臉部檢測的平滑處理
 
 args = argparse.Namespace(

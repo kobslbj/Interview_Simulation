@@ -11,7 +11,7 @@ COLOR_EMBEDDING = "./TTS/color_embedding"
 OUTPUT_DIR = "./data/target"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-text = 'Prosody is the rhythmic and intonational aspect of spoken language that significantly influences how speech is perceived and understood. It encompasses elements such as pitch, tone, stress, and tempo, which together convey emotions, emphasize meaning, and structure communication. '
+text = "This is a string for API testing, if the output audio could speak this sentence, it means it works. Congradulations!"
 
 def generate_tts_audio(text, reference_speaker, output_dir, ckpt_base, ckpt_converter, device="cpu"):
     os.makedirs(output_dir, exist_ok=True)

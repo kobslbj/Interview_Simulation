@@ -10,7 +10,7 @@ import torch
 from TTS.inference import generate_tts_audio
 from AV_Sync.inference import main as av_sync_main
 
-REFERENCE_SPEAKER = "./data/reference/yuchi1.mp3"
+REFERENCE_SPEAKER = "./data/reference/elon_testing.mp3"
 COLOR_EMBEDDING = "./TTS/color_embedding"
 CKPT_BASE = "./TTS/checkpoints/base_speakers/EN"
 CKPT_CONVERTER = "./TTS/checkpoints/converter"
@@ -22,8 +22,18 @@ FINAL_OUTPUT_PATH = "./data/target/result.mp4"
 
 app = Flask(__name__)
 
-@app.route('/generate_video', methods=['POST'])
+@app.route('/')
+def home():
+    return "Welcome to the Flask API! Use /generate_video to generate a video."
+
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+
+@app.route('/generate_video', methods=['GET', 'POST'])
 def generate_video():
+    if request.method == 'GET':
+        return jsonify({"message": "Use POST method with JSON payload to generate a video"}), 200
     try:
         data = request.json
         if 'text' not in data:
@@ -55,6 +65,7 @@ def generate_video():
     except Exception as e:
         print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 
 
 if __name__ == '__main__':
