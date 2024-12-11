@@ -32,7 +32,7 @@ const rolePrompts = {
 - 測試流程優化
 - 測試文檔規範`,
 
-  'QA工程師': `你是一位資深的QA工程師面試官。評估重點包括：
+  'QA工程師': `你是一位資深的QA工程師面試官。評估重點包：
 - 質量保證流程
 - 測試計劃制定
 - 風險評估
@@ -128,7 +128,7 @@ export async function POST(req: Request) {
 面試風格：
 ${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
 
-請使用繁體中文進行對話。`;
+請使用繁體中文進行對話`;
 
   const systemMessage = {
     role: 'system',
@@ -139,6 +139,6 @@ ${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
     model: openai('gpt-4'),
     messages: [systemMessage, ...messages],
   });
-
+  
   return result.toDataStreamResponse();
 }
