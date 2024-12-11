@@ -11,6 +11,7 @@ export default function Chat() {
   const [difficulty, setDifficulty] = useState('medium');
   const [key, setKey] = useState(0);
   const [isListening, setIsListening] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     setKey(prev => prev + 1);
@@ -21,7 +22,15 @@ export default function Chat() {
       role: selectedRole,
       difficulty
     },
-    id: `chat-${key}`
+    id: `chat-${key}`,
+    onResponse: async (response) => {
+      const data = await response.json();
+      if (data.video) {
+        const blob = new Blob([data.video], { type: 'video/mp4' });
+        const url = URL.createObjectURL(blob);
+        setVideoUrl(url);
+      }
+    }
   });
 
   const startListening = () => {
@@ -74,6 +83,25 @@ export default function Chat() {
                   selectedRole={selectedRole}
                 />
               ))}
+              
+              {videoUrl && (
+                <div className="mt-4">
+                  <video 
+                    controls 
+                    className="w-full max-w-md mx-auto"
+                    src={videoUrl}
+                  >
+                    <track 
+                      kind="captions"
+                      src="" 
+                      srcLang="zh"
+                      label="中文字幕"
+                      default
+                    />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
+              )}
             </div>
 
             <ChatInput

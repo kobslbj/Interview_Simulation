@@ -1,5 +1,6 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
+import sendToBackend from '../backend/route';
 
 export const maxDuration = 30;
 
@@ -140,5 +141,11 @@ ${difficultyPrompts[difficulty as keyof typeof difficultyPrompts]}
     messages: [systemMessage, ...messages],
   });
 
-  return result.toDataStreamResponse();
+  const response = result.toDataStreamResponse();
+  const videoBlob = await sendToBackend(messages[messages.length - 1].content);
+  
+  return new Response(JSON.stringify({
+    text: response,
+    video: videoBlob
+  }));
 }
